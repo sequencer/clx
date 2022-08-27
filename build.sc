@@ -79,3 +79,14 @@ object comd extends skel {
     override def moduleDeps = super.moduleDeps ++ Seq(mychiseltest)
   }
 }
+
+object codec extends skel {
+  override def scalaVersion = v.scala
+  override def moduleDeps = super.moduleDeps
+  object tests extends Tests with TestModule.ScalaTest {
+    override def ivyDeps = super.ivyDeps() ++ Agg(
+      ivy"edu.berkeley.cs::chiseltest:0.5.1"
+    )
+    override def moduleDeps = super.moduleDeps ++ Seq(mychiseltest)
+  }
+}
