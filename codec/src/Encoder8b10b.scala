@@ -38,10 +38,13 @@ class Encoder8b10b extends Module {
     }
 
     private def neutral_disparity(encoded_data: UInt) = {
+        // TODO:
+        // add to EncodeTable
         PopCount(encoded_data) === PopCount(~encoded_data)
     }
 
     // choose group for D.x.7, avoiding continuous 1 or 0
+    // TODO: or just two tables as spec ??
     private def choose_group(data_5b: UInt, rd: Bool) = {
         val nxt_group = WireInit(false.B)
 

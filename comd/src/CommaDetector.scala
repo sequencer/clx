@@ -3,9 +3,13 @@ package comd
 import chisel3._
 import chisel3.util._
 
+// TODO 1
+// camel signal name
 class CommaDetector extends Module {
     val io = IO(new Bundle {
         val rx_user_data_in = Input(UInt(20.W))
+        // TODO 2
+        // asset not 1 -> 0
         val symbol_locked = Output(Bool())
         val rx_data_aligned = Output(UInt(20.W))
     })
@@ -29,18 +33,27 @@ class CommaDetector extends Module {
                                 data40b(i + 9, i) === comp)))
 
     // locked symbol
+    // TODO 3
+    // use circuit format, not API
     when (match_array.contains(true.B)) {
         locked_r := true.B
+        // TODO 4 find first 1b
         offset_idx_r := match_array.indexWhere(_ === true.B)
     }
 
     // combination output data
     when (locked_r) {
+        // TODO 4
+        // multi-cycle
         io.rx_data_aligned := (data40b_d >> offset_idx_r) & "hf_ffff".U
     } .otherwise {
         io.rx_data_aligned := 0.U(20.W)
     }
 }
+
+// TODO 5
+// rst of the control part
+// discussion with gz
 
 object CommaDetectorV extends App {
     (new chisel3.stage.ChiselStage).emitVerilog(new CommaDetector)
