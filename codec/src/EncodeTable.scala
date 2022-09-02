@@ -5,9 +5,9 @@ package codec
 import chisel3._
 
 object EncodeTable {
-    val word_width = 4.U(3.W) // max for D.x.7
+    val wordWidth = 4.U(3.W) // max for D.x.7
 
-    val mapping_5b6b_d =
+    val mapping5b6bData =
         Seq("D.00     00000   100111  011000",
             "D.01     00001   011101  100010",
             "D.02     00010   101101  010010",
@@ -41,7 +41,7 @@ object EncodeTable {
             "D.30     11110   011110  100001",
             "D.31     11111   101011  010100")
 
-    val mapping_3b4b_d =
+    val mapping3b4bData =
         Seq("D.x.0    000     1011    0100",
             "D.x.1    001     1001",
             "D.x.2    010     0101",
@@ -52,10 +52,10 @@ object EncodeTable {
             "D.x.7    111     1110    0001   0111   1000")
 
     // only use five control characters: K28.{0 3 4 5 6}
-    val mapping_5b6b_c =
+    val mapping5b6bCtrl =
         Seq("K.28     11100   001111  110000")
 
-    val mapping_3b4b_c =
+    val mapping3b4bCtrl =
         Seq("K.x.0    000     1011    0100",
             "K.x.1    001     0110    1001", // no use
             "K.x.2    010     1010    0101", // no use
