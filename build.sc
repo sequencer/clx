@@ -60,10 +60,10 @@ trait skel extends ScalaModule {
 object skel extends skel {
   override def scalaVersion = v.scala
   override def moduleDeps = super.moduleDeps
-  object tests extends Tests with TestModule.ScalaTest {
+  object tests1 extends Tests with TestModule.ScalaTest {
     override def ivyDeps = super.ivyDeps() ++ Agg(
-//      v.utest,
-      ivy"edu.berkeley.cs::chiseltest:0.5.1"
+      v.utest,
+//      ivy"edu.berkeley.cs::chiseltest:0.5.1"
     )
     override def moduleDeps = super.moduleDeps ++ Seq(mychiseltest)
   }
@@ -74,7 +74,8 @@ object comd extends skel {
   override def moduleDeps = super.moduleDeps
   object tests extends Tests with TestModule.ScalaTest {
     override def ivyDeps = super.ivyDeps() ++ Agg(
-      ivy"edu.berkeley.cs::chiseltest:0.5.1"
+      v.utest
+//      ivy"edu.berkeley.cs::chiseltest:0.5.1"
     )
     override def moduleDeps = super.moduleDeps ++ Seq(mychiseltest)
   }
@@ -100,4 +101,14 @@ object pma extends skel {
     )
     override def moduleDeps = super.moduleDeps ++ Seq(mychiseltest)
   }
+}
+
+object asyncqueuePkg extends skel {
+  override def scalaVersion = v.scala
+  override def moduleDeps = super.moduleDeps
+}
+
+object asyncfifo extends skel {
+  override def scalaVersion = v.scala
+  override def moduleDeps = super.moduleDeps ++ Seq(asyncqueuePkg)
 }
