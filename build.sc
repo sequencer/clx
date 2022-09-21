@@ -60,7 +60,7 @@ trait skel extends ScalaModule {
 object skel extends skel {
   override def scalaVersion = v.scala
   override def moduleDeps = super.moduleDeps
-  object tests1 extends Tests with TestModule.ScalaTest {
+  object tests extends Tests with TestModule.ScalaTest {
     override def ivyDeps = super.ivyDeps() ++ Agg(
       v.utest,
 //      ivy"edu.berkeley.cs::chiseltest:0.5.1"
@@ -111,4 +111,15 @@ object asyncqueuePkg extends skel {
 object asyncfifo extends skel {
   override def scalaVersion = v.scala
   override def moduleDeps = super.moduleDeps ++ Seq(asyncqueuePkg)
+}
+
+object linktraining extends skel {
+  override def scalaVersion = v.scala
+  override def moduleDeps = super.moduleDeps
+  object tests extends Tests with TestModule.ScalaTest {
+    override def ivyDeps = super.ivyDeps() ++ Agg(
+      v.utest
+    )
+    override def moduleDeps = super.moduleDeps ++ Seq(mychiseltest)
+  }
 }
