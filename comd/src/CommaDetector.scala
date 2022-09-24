@@ -32,7 +32,7 @@ class CommaDetector extends Module {
     // symbol locked
     when (match_array.contains(true.B)) { // 20-input OR Gate
         lockedReg := true.B
-        offsetReg := match_array.indexWhere(_ === true.B) // nested if-else
+        offsetReg := OHToUInt(match_array.asUInt) // "b1000".U -> 3.U
     }
 
     // combination output data
