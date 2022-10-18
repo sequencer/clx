@@ -8,6 +8,7 @@ import $file.dependencies.chisel3.build
 import $file.dependencies.firrtl.build
 import $file.dependencies.treadle.build
 import $file.dependencies.chiseltest.build
+import $file.dependencies.tilelink.common
 
 object v {
   val scala = "2.12.16"
@@ -42,6 +43,13 @@ object mychiseltest extends dependencies.chiseltest.build.chiseltestCrossModule(
 object mytreadle extends dependencies.treadle.build.treadleCrossModule(v.scala) {
   override def millSourcePath = os.pwd /  "dependencies" / "treadle"
   def firrtlModule: Option[PublishModule] = Some(myfirrtl)
+}
+
+object mytilelink extends dependencies.tilelink.common.TileLinkModule {
+  override def millSourcePath = os.pwd / "dependencies" / "tilelink" / "tilelink"
+  def scalaVersion = T { v.scala }
+  override def chisel3Module = Some(mychisel3)
+  override def chisel3PluginJar = T {Some(mychisel3.plugin.jar()) }
 }
 
 trait skel extends ScalaModule {
@@ -80,12 +88,24 @@ object comd extends skel {
   }
 }
 
+// ChipLink eXpress
+object clx extends skel {
+  override def scalaVersion = v.scala
+  override def moduleDeps = super.moduleDeps ++ Seq(mytilelink)
+  object tests extends Tests with TestModule.ScalaTest {
+    override def ivyDeps = super.ivyDeps() ++ Agg(
+      v.utest
+    )
+    override def moduleDeps = super.moduleDeps ++ Seq(mychiseltest)
+  }
+}
+
 object codec extends skel {
   override def scalaVersion = v.scala
   override def moduleDeps = super.moduleDeps
   object tests extends Tests with TestModule.ScalaTest {
     override def ivyDeps = super.ivyDeps() ++ Agg(
-      ivy"edu.berkeley.cs::chiseltest:0.5.1"
+      v.utest
     )
     override def moduleDeps = super.moduleDeps ++ Seq(mychiseltest)
   }
@@ -96,14 +116,14 @@ object pma extends skel {
   override def moduleDeps = super.moduleDeps
   object tests extends Tests with TestModule.ScalaTest {
     override def ivyDeps = super.ivyDeps() ++ Agg(
-      ivy"edu.berkeley.cs::chiseltest:0.5.1"
+      v.utest
     )
     override def moduleDeps = super.moduleDeps ++ Seq(mychiseltest)
   }
 }
 
 object asyncqueuePkg extends skel {
-  override def scalaVersion = v.scala
+  override def scalaVersion = v.scala 
   override def moduleDeps = super.moduleDeps
 }
 
@@ -114,13 +134,8 @@ object asyncfifo extends skel {
 
 object linktraining extends skel {
   override def scalaVersion = v.scala
+
   override def moduleDeps = super.moduleDeps
-  object tests extends Tests with TestModule.ScalaTest {
-    override def ivyDeps = super.ivyDeps() ++ Agg(
-      v.utest
-    )
-    override def moduleDeps = super.moduleDeps ++ Seq(mychiseltest)
-  }
 }
 
 object adapter extends skel {
@@ -133,3 +148,4 @@ object adapter extends skel {
     override def moduleDeps = super.moduleDeps ++ Seq(mychiseltest)
   }
 }
+
