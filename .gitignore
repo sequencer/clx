@@ -1,3 +1,7 @@
 out/
 .bsp/
 .idea/
+test_run_dir/
+*.json
+*.fir
+*.v
