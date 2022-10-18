@@ -1,4 +1,4 @@
-package clx
+package clxdl
 
 import chisel3._
 

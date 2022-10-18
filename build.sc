@@ -89,7 +89,7 @@ object comd extends skel {
 }
 
 // ChipLink eXpress
-object clx extends skel {
+object clxdl extends skel {
   override def scalaVersion = v.scala
   override def moduleDeps = super.moduleDeps ++ Seq(mytilelink)
   object tests extends Tests with TestModule.ScalaTest {

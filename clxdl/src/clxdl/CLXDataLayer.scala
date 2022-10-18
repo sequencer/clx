@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
-package clx
+package clxdl
 
 import chisel3._
 import chisel3.util._
 import chisel3.stage._
 
-class CLXLite(implicit p: CLXLiteParameters) extends Module {
+class CLXDataLayer(implicit p: CLXLiteParameters) extends Module {
   val io = IO(new Bundle {
     val tlSlave = Flipped(p.tl.bundle())
     val tlMaster = p.tl.bundle()
@@ -40,7 +40,7 @@ class CLXLite(implicit p: CLXLiteParameters) extends Module {
   tx.io.rxc <> rx.io.rxc
 }
 
-object EmitVerilog extends App {
+object CLXDataLayerV extends App {
   val p = CLXLiteParameters()
 
   (new ChiselStage).execute(
@@ -48,7 +48,8 @@ object EmitVerilog extends App {
       "--target-dir", "tmp"
     ),
     Seq(
-      ChiselGeneratorAnnotation(() => new CLXLite()(p))
+      ChiselGeneratorAnnotation(() => new CLXDataLayer()(p))
     )
   )
+  (new ChiselStage).emitVerilog(new CLXDataLayer()(p))
 }
