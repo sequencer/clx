@@ -8,7 +8,7 @@ class Encoder8b10b extends Module {
         val isControlCharacter = Input(Bool())
         val decoded8bInput = Input(UInt(8.W))
         val encoded10bOutput = Output(UInt(10.W))
-        val runningDisparity = Output(Bool())
+        val runningDisparity = Output(Bool()) // FIXME: useless?
     })
 
     private def formatLookupVector(mappingSeq: Seq[String]): Vec[UInt] = {
@@ -87,6 +87,6 @@ class Encoder8b10b extends Module {
     io.runningDisparity := rd
 }
 
-    object Encoder8b10bVerilog extends App {
+object Encoder8b10bVerilog extends App {
     (new chisel3.stage.ChiselStage).emitVerilog(new Encoder8b10b)
 }
