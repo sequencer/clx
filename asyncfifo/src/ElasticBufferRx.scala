@@ -11,12 +11,12 @@ class ElasticBufferRx extends Module {
         // wr
         val clkWr    = Input(Clock())
         val resetWr  = Input(Bool())
-        val wr       = Flipped(Decoupled(UInt(18.W)))
+        val wr       = Flipped(ValidIO(UInt(18.W)))
 
         // rd
         val clkRd    = Input(Clock())
         val resetRd  = Input(Bool())
-        val rd       = Decoupled(UInt(18.W))
+        val rd       = ValidIO(UInt(18.W))
     })
 
     val asyncFIFOParams = AsyncQueueParams(256, 3, safe = true, narrow = false)
@@ -34,14 +34,12 @@ class ElasticBufferRx extends Module {
     asyncFIFO.io.enq_reset := io.resetWr
     asyncFIFO.io.enq.valid := io.wr.valid && (!skipFlag)
     asyncFIFO.io.enq.bits  := io.wr.bits
-    io.wr.ready := asyncFIFO.io.enq.ready
-    // eb should always be able to receiver data. otherwise packet data will be lost
     assert(asyncFIFO.io.enq.ready === 1.U)
 
     // rd <> deq
     asyncFIFO.io.deq_clock := io.clkRd
     asyncFIFO.io.deq_reset := io.resetRd
-    asyncFIFO.io.deq.ready := io.rd.ready
+    asyncFIFO.io.deq.ready := 1.U // rx data path should be non-blocking
     io.rd.valid := asyncFIFO.io.deq.valid
     io.rd.bits := asyncFIFO.io.deq.bits
 }
