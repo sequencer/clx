@@ -6,7 +6,7 @@ import freechips.asyncqueue.{AsyncQueue, AsyncQueueParams}
 
 // wr domain: rxPcsClk
 // rd domain: sysClk
-class ElasticBufferRx extends Module {
+class ElasticBufferRx extends RawModule {
     val io = IO(new Bundle {
         // wr
         val clkWr    = Input(Clock())
