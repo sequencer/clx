@@ -20,7 +20,7 @@ class ElasticBufferRx extends RawModule {
     })
 
     val asyncFIFOParams = AsyncQueueParams(256, 3, safe = true, narrow = false)
-    val asyncFIFO = Module(new AsyncQueue(UInt(18.W), asyncFIFOParams))
+    val asyncFIFO = withClockAndReset(io.clkWr, io.resetWr) { Module(new AsyncQueue(UInt(18.W), asyncFIFOParams)) }
 
     // filter out {COM + SKP}
     val skipFlag = WireDefault(false.B)
@@ -34,7 +34,7 @@ class ElasticBufferRx extends RawModule {
     asyncFIFO.io.enq_reset := io.resetWr
     asyncFIFO.io.enq.valid := io.wr.valid && (!skipFlag)
     asyncFIFO.io.enq.bits  := io.wr.bits
-    assert(asyncFIFO.io.enq.ready === 1.U)
+    withClockAndReset(io.clkWr, io.resetWr) { assert(asyncFIFO.io.enq.ready === 1.U) }
 
     // rd <> deq
     asyncFIFO.io.deq_clock := io.clkRd

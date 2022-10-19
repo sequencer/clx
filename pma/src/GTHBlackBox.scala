@@ -17,9 +17,9 @@ class GTHBlackBox extends BlackBox {
         val rxUserDataOut   = Output(UInt(20.W))
 
         // pll
-        val pllRefClkP      = Input(Clock())
-        val pllRefClkN      = Input(Clock())
-        val clxDlClk125M      = Output(Clock())
+        val pllRefClkP      = Input(Bool())
+        val pllRefClkN      = Input(Bool())
+        val clxDlClk125M    = Output(Clock())
 
         // RF
         val txRfOutP        = Output(UInt(1.W))
