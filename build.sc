@@ -159,3 +159,23 @@ object mux extends skel {
     override def moduleDeps = super.moduleDeps ++ Seq(mychiseltest)
   }
 }
+
+object clx extends skel {
+  override def scalaVersion = v.scala
+  override def moduleDeps = super.moduleDeps ++ Seq(
+    comd,
+    clxdl,
+    codec,
+    pma,
+    asyncfifo,
+    linktraining,
+    adapter,
+    mux
+  )
+  object tests extends Tests with TestModule.ScalaTest {
+    override def ivyDeps = super.ivyDeps() ++ Agg(
+      v.utest
+    )
+    override def moduleDeps = super.moduleDeps ++ Seq(mychiseltest)
+  }
+}
