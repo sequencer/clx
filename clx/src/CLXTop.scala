@@ -18,9 +18,9 @@ class CLXTopUp extends RawModule {
     val io = IO(new Bundle {
 //        val sysReset = Input(Bool())
         // TODO: reset synchronizer
-        val txPcsReset = Input(Bool()) // gth.io.txPcsClk
+        val txReset    = Input(Bool())    // gth.io.txPcsClk
         val clxDlReset = Input(Bool()) // gth.io.clxDlClk125M
-        val rxPcsReset  = Input(Bool()) // gth.io.rxPcsClk
+        val rxReset    = Input(Bool())   // gth.io.rxPcsClk
 
         // CLXDataLayer
         val tlSlave = Flipped(p.tl.bundle())
@@ -29,14 +29,14 @@ class CLXTopUp extends RawModule {
         // gthBlackBox
         val pllRefClkP = Input(Bool())
         val pllRefClkN = Input(Bool())
-        val txReset = Input(Bool())
-        val rxReset = Input(Bool())
         val rxRfInP = Input(UInt(1.W))
         val rXRfInN = Input(UInt(1.W))
 
         val powerGood = Output(Bool())
         val txRfOutP = Output(UInt(1.W))
         val txRfOutN = Output(UInt(1.W))
+
+        val hbGtwizResetAll = Input(Bool())
     })
 
     val gth = Module(new GTHBlackBox)
@@ -49,9 +49,10 @@ class CLXTopUp extends RawModule {
     io.powerGood      := gth.io.powerGood
     io.txRfOutP       := gth.io.txRfOutP
     io.txRfOutN       := gth.io.txRfOutN
+    gth.io.hbGtwizResetAll := io.hbGtwizResetAll
 
     // 125M
-    val clxDlClk125M = gth.io.clxDlClk125M
+    val clxDlClk125M = gth.io.clk125M
     val c2b = Wire(ValidIO(UInt(p.dataBits.W)))
     val b2c = Wire(Flipped(ValidIO(UInt(p.dataBits.W))))
 
@@ -69,7 +70,7 @@ class CLXTopUp extends RawModule {
     val ebWr = Wire(Flipped(ValidIO(UInt(18.W))))
     val ebRd = Wire(Flipped(ValidIO(UInt(18.W))))
 
-    withClockAndReset (txPcsClk, io.txPcsReset.asBool) {
+    withClockAndReset (txPcsClk, io.txReset.asBool) {
         val linkTrainerUp = Module(new LinkTrainerUp)
         val txMux = Module(new TxMux3x1)
         val rxMux = Module(new RxMux2x1)
@@ -94,16 +95,16 @@ class CLXTopUp extends RawModule {
     val elasticBufferRx = Module(new ElasticBufferRx)
 
     elasticBufferRx.io.clkWr := rxPcsClk
-    elasticBufferRx.io.resetWr := io.rxPcsReset
+    elasticBufferRx.io.resetWr := io.rxReset
 
     elasticBufferRx.io.clkRd := txPcsClk
-    elasticBufferRx.io.resetRd := io.txPcsReset
+    elasticBufferRx.io.resetRd := io.txReset
 
     elasticBufferRx.io.wr <> ebWr
     elasticBufferRx.io.rd <> ebRd
 
     // 250M RX
-    withClockAndReset (rxPcsClk, io.rxPcsReset.asBool) {
+    withClockAndReset (rxPcsClk, io.rxReset.asBool) {
         val commaDetector = Module(new CommaDetector)
         val decoder = Module(new Decoder)
 

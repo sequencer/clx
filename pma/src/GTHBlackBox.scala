@@ -19,7 +19,7 @@ class GTHBlackBox extends BlackBox {
         // pll
         val pllRefClkP      = Input(Bool())
         val pllRefClkN      = Input(Bool())
-        val clxDlClk125M    = Output(Clock())
+        val clk125M    = Output(Clock())
 
         // RF
         val txRfOutP        = Output(UInt(1.W))
@@ -27,5 +27,7 @@ class GTHBlackBox extends BlackBox {
 
         val rxRfInP         = Input(UInt(1.W))
         val rXRfInN         = Input(UInt(1.W))
+
+        val hbGtwizResetAll = Input(Bool())
     })
 }
