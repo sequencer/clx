@@ -34,7 +34,7 @@ class ElasticBufferRx extends RawModule {
     asyncFIFO.io.enq_reset := io.resetWr
     asyncFIFO.io.enq.valid := io.wr.valid && (!skipFlag)
     asyncFIFO.io.enq.bits  := io.wr.bits
-    withClockAndReset(io.clkWr, io.resetWr) { assert(asyncFIFO.io.enq.ready === 1.U) }
+//    withClockAndReset(io.clkWr, io.resetWr) { assert(asyncFIFO.io.enq.ready === 1.U) }
 
     // rd <> deq
     asyncFIFO.io.deq_clock := io.clkRd
