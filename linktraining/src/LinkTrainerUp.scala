@@ -41,7 +41,7 @@ class LinkTrainerUp extends Module {
     })
 
     val state = RegInit(U1)
-    val recvedEightTs1 = WireInit(false.B)
+    val recvedEightTs1 = RegInit(false.B)
     val oneSetSent = WireInit(false.B)
     val sentEightTs2 = WireInit(false.B)
 
@@ -104,7 +104,14 @@ class LinkTrainerUp extends Module {
         }
     }
 
-    recvedEightTs1 := (ts1Cnt === 7.U) && (ts1State === S3) && (io.rxDataIn === TS1(3))
+//    recvedEightTs1 := (ts1Cnt === 7.U) && (ts1State === S3) && (io.rxDataIn === TS1(3))
+    when (recvedEightTs1) {
+        recvedEightTs1 := 1.U //
+    } .elsewhen ((ts1Cnt === 7.U) && (ts1State === S3) && (io.rxDataIn === TS1(3))) {
+        recvedEightTs1 := 1.U
+    } .otherwise {
+        recvedEightTs1 := recvedEightTs1
+    }
 
     // send TS1 continuously @ U1
     val ts1SetInnerCnt = RegInit(0.U(2.W))

@@ -45,8 +45,8 @@ class LinkTrainerDn extends Module {
     })
 
     val state = RegInit(D1)
-    val recvedEightTs1 = WireInit(false.B)
-    val recvedEightTs2 = WireInit(false.B)
+    val recvedEightTs1 = RegInit(false.B)
+    val recvedEightTs2 = RegInit(false.B)
     val oneSetSent = WireInit(false.B)
 
     io.linkedUp := (state === L0)
@@ -108,7 +108,14 @@ class LinkTrainerDn extends Module {
         }
     }
 
-    recvedEightTs1 := (ts1Cnt === 7.U) && (ts1State === S3) && (io.rxDataIn === TS1(3))
+//    recvedEightTs1 := (ts1Cnt === 7.U) && (ts1State === S3) && (io.rxDataIn === TS1(3))
+    when(recvedEightTs1) {
+        recvedEightTs1 := 1.U
+    }.elsewhen((ts1Cnt === 7.U) && (ts1State === S3) && (io.rxDataIn === TS1(3))) {
+        recvedEightTs1 := 1.U
+    }.otherwise {
+        recvedEightTs1 := recvedEightTs1
+    }
 
     // recvedEightTs2
     val ts2Cnt = RegInit(0.U(3.W))
@@ -152,7 +159,14 @@ class LinkTrainerDn extends Module {
         }
     }
 
-    recvedEightTs2 := (ts2Cnt === 7.U) && (ts2State === T3) && (io.rxDataIn === TS2(3))
+//    recvedEightTs2 := (ts2Cnt === 7.U) && (ts2State === T3) && (io.rxDataIn === TS2(3))
+    when (recvedEightTs2) {
+        recvedEightTs2 := 1.U
+    } .elsewhen((ts2Cnt === 7.U) && (ts2State === T3) && (io.rxDataIn === TS2(3))) {
+        recvedEightTs2 := 1.U
+    } .otherwise {
+        recvedEightTs2 := recvedEightTs2
+    }
 
     // send TS1 continuously @ D2
     val ts1SetInnerCnt = RegInit(0.U(2.W))
