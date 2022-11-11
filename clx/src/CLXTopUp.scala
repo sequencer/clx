@@ -53,14 +53,14 @@ class CLXTopUp extends RawModule {
 
     // 125M
     val clxDlClk125M = gth.io.clk125M
-    val c2b = Wire(ValidIO(UInt(p.dataBits.W)))
-    val b2c = Wire(Flipped(ValidIO(UInt(p.dataBits.W))))
+    val c2b32b125M = Wire(ValidIO(UInt(p.dataBits.W)))
+    val b2c32b125M = Wire(Flipped(ValidIO(UInt(p.dataBits.W))))
 
     withClockAndReset (clxDlClk125M, io.clxDlReset.asBool) {
         val clxDataLayer = Module(new CLXDataLayer()(p))
 
-        c2b <> clxDataLayer.io.c2b
-        b2c <> clxDataLayer.io.b2c
+        c2b32b125M <> clxDataLayer.io.c2b
+        b2c32b125M <> clxDataLayer.io.b2c
         clxDataLayer.io.tlSlave <> io.tlSlave
         clxDataLayer.io.tlMaster <> io.tlMaster
     }
@@ -69,16 +69,21 @@ class CLXTopUp extends RawModule {
     val txPcsClk = gth.io.txPcsClk
     val ebWr = Wire(Flipped(ValidIO(UInt(18.W))))
     val ebRd = Wire(Flipped(ValidIO(UInt(18.W))))
+    val c2b18b250M = Wire(ValidIO(UInt(18.W)))
+    c2b18b250M.valid := c2b32b125M.valid
+    val low16b = WireInit(true.B)
+    c2b18b250M.bits := Mux(low16b, Cat(0.U(2.W), c2b32b125M.bits(15, 0)), Cat(0.U(2.W), c2b32b125M.bits(31, 16)))
 
     withClockAndReset (txPcsClk, io.txReset.asBool) {
         val linkTrainerUp = Module(new LinkTrainerUp)
         val txMux = Module(new TxMux3x1)
         val rxMux = Module(new RxMux2x1)
         val encoder = Module(new Encoder)
+        val widthAdapterRx = Module(new WidthAdapterRx)
 
         linkTrainerUp.io.rxDataIn := rxMux.io.linkTrainerRxData
 
-        txMux.io.c2b := c2b
+        txMux.io.c2b := c2b18b250M
         txMux.io.linkedUp := linkTrainerUp.io.linkedUp
         txMux.io.ltssmTxData := linkTrainerUp.io.txDataOut
 
@@ -86,8 +91,14 @@ class CLXTopUp extends RawModule {
         gth.io.txUserDataIn := encoder.io.encoded20b
 
         rxMux.io.rxData18b <> ebRd
-        rxMux.io.b2c <> b2c
+        rxMux.io.b2c16b <> widthAdapterRx.io.b2c16b
         rxMux.io.linkedUp <> linkTrainerUp.io.linkedUp
+
+        b2c32b125M <> widthAdapterRx.io.b2c32b
+
+        val low16bReg = RegInit(true.B)
+        low16bReg := !low16bReg
+        low16b := low16bReg
     }
 
     // crossing clock domain between 250M RX and 250M TX

@@ -15,10 +15,8 @@ class WidthAdapterRx extends Module {
     import WidthAdapterRx.State._
 
     val io = IO(new Bundle {
-        val valid16b = Input(Bool())
-        val data16b = Input(UInt(16.W))
-        val valid32b = Output(Bool())
-        val data32b = Output(UInt(32.W))
+        val b2c16b = Flipped(ValidIO(UInt(16.W)))
+        val b2c32b = ValidIO(UInt(32.W))
     })
 
     val reg32bPing = RegInit(0.U(32.W))
@@ -28,24 +26,24 @@ class WidthAdapterRx extends Module {
     val validEnd = RegInit(0.U(1.W))
     val validEndD1 = RegNext(validEnd)
 
-    io.valid32b := validReg | validEnd | validEndD1
+    io.b2c32b.valid := validReg | validEnd | validEndD1
 
     val state = RegInit(IDLE)
     switch (state) {
         is (IDLE) {
-            when(io.valid16b) {
+            when(io.b2c16b.valid) {
                 state := PING
             }
         }
         is (PING) {
-            when (!io.valid16b) {
+            when (!io.b2c16b.valid && cnt === 1.U) {
                 state := IDLE
             } .elsewhen (cnt === 1.U) {
                 state := PONG
             }
         }
         is (PONG) {
-            when(!io.valid16b) {
+            when(!io.b2c16b.valid && cnt === 1.U) {
                 state := IDLE
             }.elsewhen(cnt === 1.U) {
                 state := PING
@@ -54,7 +52,7 @@ class WidthAdapterRx extends Module {
     }
 
     val reg32bOut = RegInit(0.U(32.W))
-    io.data32b := reg32bOut
+    io.b2c32b.bits := reg32bOut
     when (cnt === 1.U) {
         when (state === PING) {
             reg32bOut := reg32bPing
@@ -72,21 +70,21 @@ class WidthAdapterRx extends Module {
 
     when (cnt === 0.U) {
         when (state === PING) {
-            reg32bPing := Cat(io.data16b, reg32bPing(15, 0))
+            reg32bPing := Cat(io.b2c16b.bits, reg32bPing(15, 0))
         } .elsewhen (state === PONG) {
-            reg32bPong := Cat(io.data16b, reg32bPong(15, 0))
-        } .elsewhen (state === IDLE && io.valid16b) {
-            reg32bPing := Cat(reg32bPing(31, 16), io.data16b)
+            reg32bPong := Cat(io.b2c16b.bits, reg32bPong(15, 0))
+        } .elsewhen (state === IDLE && io.b2c16b.valid) {
+            reg32bPing := Cat(reg32bPing(31, 16), io.b2c16b.bits)
         }
     } .elsewhen (cnt === 1.U) {
         when (state === PING) {
-            reg32bPong := Cat(reg32bPong(31, 16), io.data16b) // maybe weird
+            reg32bPong := Cat(reg32bPong(31, 16), io.b2c16b.bits) // maybe weird
         }.elsewhen(state === PONG) {
-            reg32bPing := Cat(reg32bPing(31, 16), io.data16b)
+            reg32bPing := Cat(reg32bPing(31, 16), io.b2c16b.bits)
         }
     }
 
-    when (!io.valid16b && cnt === 1.U) {
+    when (!io.b2c16b.valid && cnt === 1.U) {
         validReg := 0.U
     } .elsewhen(state === PING && cnt === 1.U) {
         validReg := 1.U
@@ -94,7 +92,7 @@ class WidthAdapterRx extends Module {
         validReg := validReg
     }
 
-    when (cnt === 1.U && !io.valid16b) {
+    when (cnt === 1.U && !io.b2c16b.valid) {
         validEnd := 1.U
     } .otherwise {
         validEnd := 0.U
