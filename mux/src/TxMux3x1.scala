@@ -1,7 +1,6 @@
 package mux
 
 import chisel3._
-import chisel3.experimental.ChiselEnum
 import chisel3.util._
 
 // mux output to Encoder
@@ -13,15 +12,15 @@ class TxMux3x1 extends Module {
         val txData18b = Output(UInt(18.W))
     })
 
-    val SKP = "h1c".U
-    val COM = "hbc".U
+    val SKP = "h1c".U(8.W)
+    val COM = "hbc".U(8.W)
 
     when (!io.linkedUp) {
         io.txData18b := io.ltssmTxData
     } .elsewhen (io.c2b.valid) {
         io.txData18b := io.c2b.bits
     } .otherwise {
-        io.txData18b := Cat("b11".U, SKP, COM)
+        io.txData18b := Cat("b11".U(2.W), SKP, COM)
     }
 }
 
