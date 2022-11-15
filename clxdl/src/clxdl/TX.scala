@@ -29,8 +29,7 @@ class TX(implicit p: CLXLiteParameters) extends Module {
   val ioX: Seq[DecoupledIO[DataLayer]] = (qX zip (tx.X zip txInc.X)) map { case (q, (credit, gain)) =>
     val first = RegEnable(q.bits.last, true.B, q.fire)
     val delta = credit -& q.bits.beats
-//    val allow = !first || (delta.asSInt >= 0.S)
-    val allow = true.B
+    val allow = !first || (delta.asSInt >= 0.S)
     credit := Mux(q.fire && first, delta, credit) + gain
 
     val cq = Module(new ShiftQueue(chiselTypeOf(q.bits), 2)) // maybe flow?
@@ -63,12 +62,9 @@ class TX(implicit p: CLXLiteParameters) extends Module {
   when (f.fire) { xmit := ~0.U(xmitBits.W) }
 
   // Flow control for returned credits
-//  val allowReturn = !ioX.map(_.valid).reduce(_ || _) || forceXmit
   f.bits  := rxQ.io.deq.bits
   f.valid := rxQ.io.deq.valid && forceXmit
   rxQ.io.deq.ready := f.ready && forceXmit
-//  f.valid := rxQ.io.deq.valid && allowReturn
-//  rxQ.io.deq.ready := f.ready && allowReturn
 
   // Select a channel to transmit from those with data and space
   val first = RegInit(true.B)
@@ -79,10 +75,7 @@ class TX(implicit p: CLXLiteParameters) extends Module {
   val allowed = Mux(first, readys, state)
   (ioF zip allowed.asBools) foreach { case (beat, sel) => beat.ready := sel }
 
-//  val send = Mux(first, rxQ.io.deq.fire, (state & requests) =/= 0.U)
-//  val send = Mux(first, rxQ.io.deq.valid, (state & requests) =/= 0.U)  // org
   val send = (grant & requests) =/= 0.U
-//  assert (send === ((grant & requests) =/= 0.U))
 
   when (send) { first := (grant & lasts).orR }
   when (first) { state := winner }
