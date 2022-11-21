@@ -13,17 +13,19 @@ class RX(implicit p: CLXLiteParameters) extends Module {
     val txc = new CreditBump()
   })
 
+  val b2c_d1 = RegNext(io.b2c)
+  val b2c_d2 = RegNext(b2c_d1)
   // fit b2c into the firstLast API
   val beat = Wire(Decoupled(UInt(p.dataBits.W)))
-  beat.bits  := io.b2c.bits
-  beat.valid := io.b2c.valid
+  beat.bits  := b2c_d2.bits
+  beat.valid := b2c_d2.valid
   beat.ready := true.B
 
   // select the correct HellaQueue for the request
   val (first, _) = beat.firstLast()
   val formatBits  = beat.bits(2, 0)
   val formatValid = beat.fire && first
-  val format = Mux(formatValid, formatBits, RegEnable(formatBits, formatValid))
+  val format = Mux(formatValid, formatBits, RegEnable(formatBits, 7.U(3.W), formatValid))
   val formats = Seq(format === 0.U, format === 3.U)
 
   // create the receiver buffers
