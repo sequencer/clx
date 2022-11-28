@@ -10,17 +10,14 @@ import comd._
 import linktraining._
 import mux._
 import pma._
+import resetsync.ResetSynchronizerBB
 
 
 class CLXTopDn extends RawModule {
     val p = CLXLiteParameters()
 
     val io = IO(new Bundle {
-//        val sysReset = Input(Bool())
-        // TODO: reset synchronizer
-        val txReset    = Input(Bool())    // gth.io.txPcsClk
-        val clxDlReset = Input(Bool()) // gth.io.clxDlClk125M
-        val rxReset    = Input(Bool())   // gth.io.rxPcsClk
+        val sysReset = Input(Bool())
 
         // CLXDataLayer
         val tlSlave = Flipped(p.tl.bundle())
@@ -35,28 +32,33 @@ class CLXTopDn extends RawModule {
         val powerGood = Output(Bool())
         val txRfOutP = Output(UInt(1.W))
         val txRfOutN = Output(UInt(1.W))
-
-        val hbGtwizResetAll = Input(Bool())
     })
 
     val gth = Module(new GTHBlackBox)
+    val resetSynchronizer = Module(new ResetSynchronizerBB)
+
     gth.io.pllRefClkP := io.pllRefClkP
     gth.io.pllRefClkN := io.pllRefClkN
-    gth.io.txReset    := io.txReset
-    gth.io.rxReset    := io.rxReset
+    gth.io.txReset    := resetSynchronizer.io.txReset
+    gth.io.rxReset    := resetSynchronizer.io.rxReset
     gth.io.rxRfInP    := io.rxRfInP
     gth.io.rXRfInN    := io.rXRfInN
     io.powerGood      := gth.io.powerGood
     io.txRfOutP       := gth.io.txRfOutP
     io.txRfOutN       := gth.io.txRfOutN
-    gth.io.hbGtwizResetAll := io.hbGtwizResetAll
+    gth.io.sysReset   := io.sysReset
+
+    resetSynchronizer.io.pllLocked := gth.io.pllLocked
+    resetSynchronizer.io.txPcsClk := gth.io.txPcsClk
+    resetSynchronizer.io.rxPcsClk := gth.io.rxPcsClk
+    resetSynchronizer.io.clk125M := gth.io.clk125M
 
     // 125M
     val clxDlClk125M = gth.io.clk125M
     val c2b32b125M = Wire(ValidIO(UInt(p.dataBits.W)))
     val b2c32b125M = Wire(Flipped(ValidIO(UInt(p.dataBits.W))))
 
-    withClockAndReset (clxDlClk125M, io.clxDlReset.asBool) {
+    withClockAndReset (clxDlClk125M, resetSynchronizer.io.clxDlReset.asBool) {
         val clxDataLayer = Module(new CLXDataLayer()(p))
 
         c2b32b125M <> clxDataLayer.io.c2b
@@ -74,7 +76,7 @@ class CLXTopDn extends RawModule {
     val low16b = WireInit(true.B)
     c2b18b250M.bits := Mux(low16b, Cat(0.U(2.W), c2b32b125M.bits(15, 0)), Cat(0.U(2.W), c2b32b125M.bits(31, 16)))
 
-    withClockAndReset (txPcsClk, io.txReset.asBool) {
+    withClockAndReset (txPcsClk, resetSynchronizer.io.txReset.asBool) {
         val linkTrainerDn = Module(new LinkTrainerDn)
         val txMux = Module(new TxMux3x1)
         val rxMux = Module(new RxMux2x1)
@@ -86,6 +88,7 @@ class CLXTopDn extends RawModule {
         txMux.io.c2b := c2b18b250M
         txMux.io.linkedUp := linkTrainerDn.io.linkedUp
         txMux.io.ltssmTxData := linkTrainerDn.io.txDataOut
+        resetSynchronizer.io.linkedUp := linkTrainerDn.io.linkedUp
 
         encoder.io.txData18b := txMux.io.txData18b
         gth.io.txUserDataIn := encoder.io.encoded20b
@@ -106,16 +109,16 @@ class CLXTopDn extends RawModule {
     val elasticBufferRx = Module(new ElasticBufferRx)
 
     elasticBufferRx.io.clkWr := rxPcsClk
-    elasticBufferRx.io.resetWr := io.rxReset
+    elasticBufferRx.io.resetWr := resetSynchronizer.io.rxReset
 
     elasticBufferRx.io.clkRd := txPcsClk
-    elasticBufferRx.io.resetRd := io.txReset
+    elasticBufferRx.io.resetRd := resetSynchronizer.io.txReset
 
     elasticBufferRx.io.wr <> ebWr
     elasticBufferRx.io.rd <> ebRd
 
     // 250M RX
-    withClockAndReset (rxPcsClk, io.rxReset.asBool) {
+    withClockAndReset (rxPcsClk, resetSynchronizer.io.rxReset.asBool) {
         val commaDetector = Module(new CommaDetector)
         val decoder = Module(new Decoder)
 

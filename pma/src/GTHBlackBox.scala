@@ -28,6 +28,8 @@ class GTHBlackBox extends BlackBox {
         val rxRfInP         = Input(UInt(1.W))
         val rXRfInN         = Input(UInt(1.W))
 
-        val hbGtwizResetAll = Input(Bool())
+        // reset
+        val sysReset = Input(Bool())
+        val pllLocked = Output(Bool())
     })
 }
