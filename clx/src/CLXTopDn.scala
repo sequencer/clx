@@ -32,6 +32,10 @@ class CLXTopDn extends RawModule {
         val powerGood = Output(Bool())
         val txRfOutP = Output(UInt(1.W))
         val txRfOutN = Output(UInt(1.W))
+
+        // add for fakeDnstream
+        val clk125M = Output(Clock())
+        val linkedUp = Output(Bool())
     })
 
     val gth = Module(new GTHBlackBox)
@@ -47,6 +51,7 @@ class CLXTopDn extends RawModule {
     io.txRfOutP       := gth.io.txRfOutP
     io.txRfOutN       := gth.io.txRfOutN
     gth.io.sysReset   := io.sysReset
+    io.clk125M        := gth.io.clk125M
 
     resetSynchronizer.io.pllLocked := gth.io.pllLocked
     resetSynchronizer.io.txPcsClk := gth.io.txPcsClk
@@ -57,6 +62,7 @@ class CLXTopDn extends RawModule {
     val clxDlClk125M = gth.io.clk125M
     val c2b32b125M = Wire(ValidIO(UInt(p.dataBits.W)))
     val b2c32b125M = Wire(Flipped(ValidIO(UInt(p.dataBits.W))))
+    val linkedUp250M = Wire(Bool())
 
     withClockAndReset (clxDlClk125M, resetSynchronizer.io.clxDlReset.asBool) {
         val clxDataLayer = Module(new CLXDataLayer()(p))
@@ -65,6 +71,9 @@ class CLXTopDn extends RawModule {
         b2c32b125M <> clxDataLayer.io.b2c
         clxDataLayer.io.tlSlave <> io.tlSlave
         clxDataLayer.io.tlMaster <> io.tlMaster
+
+        val linkedUpPre1 = RegNext(linkedUp250M)
+        io.linkedUp := RegNext(linkedUpPre1)
     }
 
     // 250M
@@ -96,6 +105,8 @@ class CLXTopDn extends RawModule {
         rxMux.io.rxData18b <> ebRd
         rxMux.io.b2c16b <> widthAdapterRx.io.b2c16b
         rxMux.io.linkedUp <> linkTrainerDn.io.linkedUp
+
+        linkedUp250M := linkTrainerDn.io.linkedUp
 
         b2c32b125M <> widthAdapterRx.io.b2c32b
 
