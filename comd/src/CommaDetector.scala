@@ -17,7 +17,8 @@ class CommaDetector extends Module {
 
     // output reg definition
     val lockedReg = RegInit(false.B)
-    io.symLocked := lockedReg
+    val symLockedReg = RegNext(lockedReg)
+    io.symLocked := RegNext(symLockedReg)
 
     // comma detection
     val comn = "b01_0111_1100".U
@@ -35,14 +36,16 @@ class CommaDetector extends Module {
         offsetReg := OHToUInt(match_array.asUInt) // "b1000".U -> 3.U
     }
 
-    // combination output data
+    // output data
+    val alignedDataInt = WireDefault(0.U(20.W))
     when (lockedReg) {
         // false path
         // shift dynamically only once
-        io.rxAligned := (data40b_d >> offsetReg) & "hf_ffff".U
+        alignedDataInt := (data40b_d >> offsetReg) & "hf_ffff".U
     } .otherwise {
-        io.rxAligned := 0.U(20.W)
+        alignedDataInt := 0.U(20.W)
     }
+    io.rxAligned := RegNext(alignedDataInt)
 }
 
 object CommaDetectorV extends App {
