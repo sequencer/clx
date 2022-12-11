@@ -80,10 +80,6 @@ class CLXTopUp extends RawModule {
     val txPcsClk = gth.io.txPcsClk
     val ebWr = Wire(Flipped(ValidIO(UInt(18.W))))
     val ebRd = Wire(Flipped(ValidIO(UInt(18.W))))
-    val c2b18b250M = Wire(ValidIO(UInt(18.W)))
-    c2b18b250M.valid := c2b32b125M.valid
-    val low16b = WireInit(true.B)
-    c2b18b250M.bits := Mux(low16b, Cat(0.U(2.W), c2b32b125M.bits(15, 0)), Cat(0.U(2.W), c2b32b125M.bits(31, 16)))
 
     withClockAndReset (txPcsClk, resetSynchronizer.io.txReset.asBool) {
         val linkTrainerUp = Module(new LinkTrainerUp)
@@ -91,10 +87,12 @@ class CLXTopUp extends RawModule {
         val rxMux = Module(new RxMux2x1)
         val encoder = Module(new Encoder)
         val widthAdapterRx = Module(new WidthAdapterRx)
+        val WidthAdapterTx = Module(new WidthAdapterTx)
 
         linkTrainerUp.io.rxDataIn := rxMux.io.linkTrainerRxData
 
-        txMux.io.c2b := c2b18b250M
+        WidthAdapterTx.io.c2b32bIn := c2b32b125M
+        txMux.io.c2b := WidthAdapterTx.io.c2b16bOut
         txMux.io.linkedUp := linkTrainerUp.io.linkedUp
         txMux.io.ltssmTxData := linkTrainerUp.io.txDataOut
         resetSynchronizer.io.linkedUp := linkTrainerUp.io.linkedUp
@@ -109,10 +107,6 @@ class CLXTopUp extends RawModule {
         linkedUp250M := linkTrainerUp.io.linkedUp
 
         b2c32b125M <> widthAdapterRx.io.b2c32b
-
-        val low16bReg = RegInit(true.B)
-        low16bReg := !low16bReg
-        low16b := low16bReg
     }
 
     // crossing clock domain between 250M RX and 250M TX
