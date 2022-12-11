@@ -50,7 +50,7 @@ class LinkTrainerDn extends Module {
     val oneSetSent = WireInit(false.B)
 
     io.linkedUp := (state === L0)
-    io.txDataOut := WireDefault(0.U(18.W))
+    io.txDataOut := WireDefault(Cat("b11".U(2.W), "h1c".U(8.W), "hbc".U(8.W)))
 
     // Downstream link trainer state transition
     switch (state) {
@@ -191,7 +191,7 @@ class LinkTrainerDn extends Module {
     }
 
     when (state === D1 || state === L0) {
-        io.txDataOut := 0.U(18.W)
+        io.txDataOut := WireDefault(Cat("b11".U(2.W), "h1c".U(8.W), "hbc".U(8.W)))
     }
 }
 

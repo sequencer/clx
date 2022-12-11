@@ -6,7 +6,7 @@ import chisel3.util._
 // mux output to Encoder
 class TxMux3x1 extends Module {
     val io = IO(new Bundle {
-        val c2b = Flipped(ValidIO(UInt(18.W))) // from CLXDataLayer
+        val c2b = Flipped(ValidIO(UInt(16.W))) // from CLXDataLayer
         val linkedUp = Input(Bool()) // from LinkTrainer
         val ltssmTxData = Input(UInt(18.W)) // LinkTrainer
         val txData18b = Output(UInt(18.W))
@@ -18,7 +18,7 @@ class TxMux3x1 extends Module {
     when (!io.linkedUp) {
         io.txData18b := io.ltssmTxData
     } .elsewhen (io.c2b.valid) {
-        io.txData18b := io.c2b.bits
+        io.txData18b := Cat(0.U(2.W), io.c2b.bits)
     } .otherwise {
         io.txData18b := Cat("b11".U(2.W), SKP, COM)
     }
