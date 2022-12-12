@@ -18,7 +18,7 @@ class CommaDetector extends Module {
     // output reg definition
     val lockedReg = RegInit(false.B)
     val symLockedReg = RegNext(lockedReg)
-    io.symLocked := RegNext(symLockedReg)
+    io.symLocked := symLockedReg
 
     // comma detection
     val comn = "b01_0111_1100".U
