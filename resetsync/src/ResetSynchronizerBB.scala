@@ -8,13 +8,17 @@ class ResetSynchronizerBB extends BlackBox {
         // I
         val pllLocked = Input(Bool())
         val linkedUp = Input(Bool())
+        val gtrxreset = Input(Bool())
+
         val txPcsClk = Input(Clock())
         val rxPcsClk = Input(Clock())
         val clk125M = Input(Clock())
+
         // O
         val txReset = Output(Bool())
         val rxReset = Output(Bool())
         val clxDlReset = Output(Bool())
+        val linkTrainerReset = Output(Bool())
     })
 
 }

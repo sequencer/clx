@@ -31,5 +31,6 @@ class GTHBlackBox extends BlackBox {
         // reset
         val sysReset = Input(Bool())
         val pllLocked = Output(Bool())
+        val gtrxreset = Output(Bool())
     })
 }
