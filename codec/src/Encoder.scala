@@ -14,6 +14,13 @@ class Encoder extends Module {
 
     val encoderLow  = Module(new Encoder8b10b)
     val encoderHigh = Module(new Encoder8b10b)
+    val rd = RegInit(false.B)
+//    val rd = WireInit(false.B)
+
+    // cascade running disparity
+    encoderLow.io.rdInput := rd
+    encoderHigh.io.rdInput := encoderLow.io.rdOutput
+    rd := encoderHigh.io.rdOutput
 
     encoderLow.io.isControlCharacter  := io.txData18b(16)
     encoderHigh.io.isControlCharacter := io.txData18b(17)

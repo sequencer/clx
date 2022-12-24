@@ -7,8 +7,9 @@ class Encoder8b10b extends Module {
     val io = IO(new Bundle {
         val isControlCharacter = Input(Bool())
         val decoded8bInput = Input(UInt(8.W))
+        val rdInput = Input(Bool())
         val encoded10bOutput = Output(UInt(10.W))
-        val runningDisparity = Output(Bool()) // FIXME: useless?
+        val rdOutput = Output(Bool())
     })
 
     private def formatLookupVector(mappingSeq: Seq[String]): Vec[UInt] = {
@@ -59,9 +60,6 @@ class Encoder8b10b extends Module {
         nextGroup
     }
 
-    // false means negative disparity, true means positive
-    val rd = RegInit(false.B)
-
     val EDCBA = WireInit(io.decoded8bInput(4, 0))
     val HGF = WireInit(io.decoded8bInput(7, 5))
 
@@ -70,12 +68,12 @@ class Encoder8b10b extends Module {
     val rdAfter5b6b = WireInit(true.B)
 
     when (!io.isControlCharacter) {  // data character
-        abcdei := lookup(lookupVec5b6bData, EDCBA, rd, false.B)
-        rdAfter5b6b := Mux(isDisparityNeutral(abcdei), rd, !rd)
+        abcdei := lookup(lookupVec5b6bData, EDCBA, io.rdInput, false.B)
+        rdAfter5b6b := Mux(isDisparityNeutral(abcdei), io.rdInput, !io.rdInput)
         fghj := lookup(lookupVec3b4bData, HGF, rdAfter5b6b, shouldUseNextMappingGroup(EDCBA, rdAfter5b6b))
     } .otherwise { // control character
-        abcdei := lookup(lookupVec5b6bCtrl, 0.U(5.W), rd, false.B)
-        rdAfter5b6b := Mux(isDisparityNeutral(abcdei), rd, !rd)
+        abcdei := lookup(lookupVec5b6bCtrl, 0.U(5.W), io.rdInput, false.B)
+        rdAfter5b6b := Mux(isDisparityNeutral(abcdei), io.rdInput, !io.rdInput)
         fghj := lookup(lookupVec3b4bCtrl, HGF, rdAfter5b6b, false.B)
     }
 
@@ -83,8 +81,7 @@ class Encoder8b10b extends Module {
     encoded10bReg := Cat(abcdei, fghj)
     io.encoded10bOutput := Reverse(encoded10bReg)
 
-    rd := rd ^ (! (isDisparityNeutral(Cat(abcdei, fghj)).asUInt) )
-    io.runningDisparity := rd
+    io.rdOutput := io.rdInput ^ (! (isDisparityNeutral(Cat(abcdei, fghj)).asUInt) )
 }
 
 object Encoder8b10bVerilog extends App {
