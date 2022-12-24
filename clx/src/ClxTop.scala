@@ -13,7 +13,7 @@ import pma._
 import resetsync._
 
 
-class CLXTopUp extends RawModule {
+class ClxTop extends RawModule {
     val p = CLXLiteParameters()
 
     val io = IO(new Bundle {
@@ -57,6 +57,7 @@ class CLXTopUp extends RawModule {
     resetSynchronizer.io.txPcsClk := gth.io.txPcsClk
     resetSynchronizer.io.rxPcsClk := gth.io.rxPcsClk
     resetSynchronizer.io.clk125M := gth.io.clk125M
+    resetSynchronizer.io.gtrxreset := gth.io.gtrxreset
 
     // 125M
     val clxDlClk125M = gth.io.clk125M
@@ -82,29 +83,31 @@ class CLXTopUp extends RawModule {
     val ebRd = Wire(Flipped(ValidIO(UInt(18.W))))
 
     withClockAndReset (txPcsClk, resetSynchronizer.io.txReset.asBool) {
-        val linkTrainerUp = Module(new LinkTrainerUp)
+        val linkTrainer = Module(new LinkTrainer)
         val txMux = Module(new TxMux3x1)
         val rxMux = Module(new RxMux2x1)
         val encoder = Module(new Encoder)
         val widthAdapterRx = Module(new WidthAdapterRx)
         val WidthAdapterTx = Module(new WidthAdapterTx)
 
-        linkTrainerUp.io.rxDataIn := rxMux.io.linkTrainerRxData
+        linkTrainer.io.vioReset := resetSynchronizer.io.linkTrainerReset
+
+        linkTrainer.io.rxDataIn := rxMux.io.linkTrainerRxData
 
         WidthAdapterTx.io.c2b32bIn := c2b32b125M
         txMux.io.c2b := WidthAdapterTx.io.c2b16bOut
-        txMux.io.linkedUp := linkTrainerUp.io.linkedUp
-        txMux.io.ltssmTxData := linkTrainerUp.io.txDataOut
-        resetSynchronizer.io.linkedUp := linkTrainerUp.io.linkedUp
+        txMux.io.linkedUp := linkTrainer.io.linkedUp
+        txMux.io.ltssmTxData := linkTrainer.io.txDataOut
+        resetSynchronizer.io.linkedUp := linkTrainer.io.linkedUp
 
         encoder.io.txData18b := txMux.io.txData18b
         gth.io.txUserDataIn := encoder.io.encoded20b
 
         rxMux.io.rxData18b <> ebRd
         rxMux.io.b2c16b <> widthAdapterRx.io.b2c16b
-        rxMux.io.linkedUp <> linkTrainerUp.io.linkedUp
+        rxMux.io.linkedUp <> linkTrainer.io.linkedUp
 
-        linkedUp250M := linkTrainerUp.io.linkedUp
+        linkedUp250M := linkTrainer.io.linkedUp
 
         b2c32b125M <> widthAdapterRx.io.b2c32b
     }
@@ -136,6 +139,6 @@ class CLXTopUp extends RawModule {
     }
 }
 
-object CLXTopV extends App {
-    (new chisel3.stage.ChiselStage).emitVerilog(new CLXTopUp)
+object ClxTopV extends App {
+    (new chisel3.stage.ChiselStage).emitVerilog(new ClxTop)
 }

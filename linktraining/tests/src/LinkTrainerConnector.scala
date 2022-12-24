@@ -8,8 +8,8 @@ class LinkTrainerConnector extends Module {
         val dnLinked = Output(Bool())
     })
 
-    val up = Module(new LinkTrainerUp)
-    val dn = Module(new LinkTrainerDn)
+    val up = Module(new LinkTrainer)
+    val dn = Module(new LinkTrainer)
 
     up.io.rxDataIn  := dn.io.txDataOut
     dn.io.rxDataIn  := up.io.txDataOut

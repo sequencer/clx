@@ -8,7 +8,8 @@ class LinkTrainerTest extends AnyFlatSpec with ChiselScalatestTester {
     behavior of "LinkTrainerConnector"
     it should "test by connecting up and dn" in {
         test(new LinkTrainerConnector).withAnnotations(Seq(WriteVcdAnnotation)) { c =>
-            c.clock.step(200)
+            c.clock.setTimeout(10000)
+            c.clock.step(9000)
         }
 
     }

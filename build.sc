@@ -136,6 +136,13 @@ object linktraining extends skel {
   override def scalaVersion = v.scala
 
   override def moduleDeps = super.moduleDeps
+
+  object tests extends Tests with TestModule.ScalaTest {
+    override def ivyDeps = super.ivyDeps() ++ Agg(
+      v.utest
+    )
+    override def moduleDeps = super.moduleDeps ++ Seq(mychiseltest)
+  }
 }
 
 object adapter extends skel {
