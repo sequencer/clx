@@ -58,6 +58,7 @@ class ClxTop extends RawModule {
     resetSynchronizer.io.rxPcsClk := gth.io.rxPcsClk
     resetSynchronizer.io.clk125M := gth.io.clk125M
     resetSynchronizer.io.gtrxreset := gth.io.gtrxreset
+    resetSynchronizer.io.gtrxreset := gth.io.gtrxreset
 
     // 125M
     val clxDlClk125M = gth.io.clk125M
@@ -67,9 +68,11 @@ class ClxTop extends RawModule {
 
     withClockAndReset (clxDlClk125M, resetSynchronizer.io.clxDlReset.asBool) {
         val clxDataLayer = Module(new CLXDataLayer()(p))
+        val b2c32b125MD1 = RegNext(b2c32b125M)
+        val b2c32b125MD2 = RegNext(b2c32b125MD1)
 
         c2b32b125M <> clxDataLayer.io.c2b
-        b2c32b125M <> clxDataLayer.io.b2c
+        b2c32b125MD2 <> clxDataLayer.io.b2c
         clxDataLayer.io.tlSlave <> io.tlSlave
         clxDataLayer.io.tlMaster <> io.tlMaster
 

@@ -13,12 +13,10 @@ class RX(implicit p: CLXLiteParameters) extends Module {
     val txc = new CreditBump()
   })
 
-  val b2c_d1 = RegNext(io.b2c)
-  val b2c_d2 = RegNext(b2c_d1)
   // fit b2c into the firstLast API
   val beat = Wire(Decoupled(UInt(p.dataBits.W)))
-  beat.bits  := b2c_d2.bits
-  beat.valid := b2c_d2.valid
+  beat.bits  := io.b2c.bits
+  beat.valid := io.b2c.valid
   beat.ready := true.B
 
   // select the correct HellaQueue for the request
