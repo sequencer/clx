@@ -23,10 +23,8 @@ class WidthAdapterRx extends Module {
     val reg32bPong = RegInit(0.U(32.W))
     val cnt = RegInit(0.U(1.W))
     val validReg = RegInit(0.U(1.W))
-    val validEnd = RegInit(0.U(1.W))
-    val validEndD1 = RegNext(validEnd)
 
-    io.b2c32b.valid := validReg | validEnd | validEndD1
+    io.b2c32b.valid := validReg
 
     val state = RegInit(IDLE)
     switch (state) {
@@ -63,9 +61,10 @@ class WidthAdapterRx extends Module {
         }
     }
 
-    // cnt: 0 1 2 1 2 1 2 1 2 0 0 0
-    when (state === PING || state === PONG) {
+    when ((state === PING || state === PONG) && io.b2c16b.valid) {
         cnt := cnt + 1.U
+    } .elsewhen(!io.b2c16b.valid && cnt === 1.U) {
+        cnt := 0.U(1.W)
     }
 
     when (cnt === 0.U) {
@@ -84,18 +83,15 @@ class WidthAdapterRx extends Module {
         }
     }
 
-    when (!io.b2c16b.valid && cnt === 1.U) {
-        validReg := 0.U
-    } .elsewhen(state === PING && cnt === 1.U) {
-        validReg := 1.U
-    } .otherwise {
-        validReg := validReg
+    val validCnt = RegInit(0.U(1.W))
+    when (validReg === 1.U) {
+        validCnt := validCnt + 1.U
     }
 
-    when (cnt === 1.U && !io.b2c16b.valid) {
-        validEnd := 1.U
-    } .otherwise {
-        validEnd := 0.U
+    when (cnt === 1.U) {
+        validReg := 1.U
+    } .elsewhen (validCnt === 1.U) {
+        validReg := 0.U
     }
 
 }
